@@ -1,0 +1,5 @@
+.DS_Store
+.claude/
+nocache_server.py
+__pycache__/
+*.log
