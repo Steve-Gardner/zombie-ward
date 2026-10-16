@@ -134,7 +134,9 @@ export function initTouch({ camera, controls, player, keys, getTargets, getWeapo
   controls.addEventListener('unlock', releaseAll);
 
   document.addEventListener('contextmenu', e => { if (touch.on) e.preventDefault(); });
-  document.addEventListener('visibilitychange', () => { if (touch.on && document.hidden && controls.isLocked) controls.unlock(); });
+  document.addEventListener('visibilitychange', () => {   // pause when you switch apps (ignores brief flickers)
+    if (touch.on && document.hidden) setTimeout(() => { if (document.hidden && controls.isLocked) controls.unlock(); }, 600);
+  });
 
   // ---- rotate-your-phone hint
   const rot = document.createElement('div');
