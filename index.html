@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8" />
 <title>ZOMBIE WARD — FPS Zombie Survival</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#111111">
 <meta name="description" content="Zombie Ward - a 3D first-person zombie survival shooter. Created by BlindWolf.">
 <link rel="manifest" href="manifest.webmanifest">
@@ -217,6 +220,7 @@
   #interact-prompt .bar-track { width: 160px; height: 6px; margin-top: 6px; background: rgba(255,255,255,0.15); border-radius: 3px; overflow: hidden; }
   #interact-prompt .bar-fill { height: 100%; background: linear-gradient(90deg,#ffd23c,#ff9e3c); width: 0%; }
 </style>
+<link rel="stylesheet" href="touch.css">
 </head>
 <body>
 
@@ -260,6 +264,7 @@
   <div id="menu-main" class="menu-sub">
     <button class="menu-btn zfont2" id="menu-difficulty">Difficulty: Intermediate</button>
     <button class="menu-btn primary zfont2" id="menu-start">Start</button>
+    <div class="menu-row"><button class="menu-btn small zfont2" id="ctlBtn">Controls: Auto</button><button class="menu-btn small zfont2" id="gfxBtn">Graphics: Auto</button></div>
     <button class="menu-btn zfont2" id="menu-tutorials">Tutorials</button>
   </div>
 
@@ -277,16 +282,27 @@
   <div id="menu-tut-panel" class="menu-sub hidden">
     <h2 class="zfont2">Tutorials</h2>
     <div id="tutorial-body">
-      <h3>The basics</h3>
-      <ul>
+      <div class="touch-only-block">
+        <h3>Touch controls</h3>
+        <ul>
+          <li><b>Left thumb</b> drags a stick to move. Push it all the way to <b>run</b>.</li>
+          <li><b>Right thumb</b> drags anywhere to look. Hold <b>FIRE</b> to shoot, and keep dragging that thumb to aim.</li>
+          <li><b>AIM</b> toggles the rifle scope. Aim assist gently pulls your view toward zombies near the crosshair.</li>
+          <li><b>JUMP</b>, <b>DUCK</b> (tap while running to slide), <b>RELOAD</b>, <b>GRENADE</b>, and the weapon button cycles knife, pistol, rifle.</li>
+          <li><b>USE</b> does what <kbd>E</kbd> does below: tap at doors, windows and the ammo crate, hold to repair boards. Hold <b>JUMP</b> to climb the ladder.</li>
+          <li>The <b>II</b> button pauses. On iPhone, use Share, then Add to Home Screen for full-screen play.</li>
+        </ul>
+      </div>
+      <h3 class="kb-only">The basics</h3>
+      <ul class="kb-only">
         <li>Click <b>Start</b>, then click in the game to capture your mouse. Press <kbd>Esc</kbd> to pause.</li>
         <li>Move with <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>, look with the mouse, jump with <kbd>Space</kbd>.</li>
         <li>Hold <kbd>Shift</kbd> to sprint. <kbd>Caps Lock</kbd> crouches. Press <kbd>Caps Lock</kbd> while sprinting to <b>slide</b>.</li>
         <li>Your health bar is bottom-left. Stop attacking for 6.5 seconds and you slowly heal.</li>
         <li>The round <b>minimap</b> (top-right) rotates with you: red = zombies, blue = allies, yellow = ammo crate, green = pickups.</li>
       </ul>
-      <h3>Combat</h3>
-      <ul>
+      <h3 class="kb-only">Combat</h3>
+      <ul class="kb-only">
         <li><kbd>1</kbd> knife, <kbd>2</kbd> pistol, <kbd>3</kbd> rifle. Hold <b>left click</b> to fire, <kbd>R</kbd> to reload.</li>
         <li><b>Right click</b> aims the rifle through its scope — zoomed and more accurate, but slower.</li>
         <li><kbd>G</kbd> throws a grenade (you start with 2). More come from zombie kills — about one every other wave — or from the ammo crate.</li>
@@ -336,19 +352,24 @@
   <div class="panel">
     <h3 id="overlay-title">Survival Briefing</h3>
     <ul id="overlay-body">
-      <li><b>Move</b> W A S D</li>
-      <li><b>Look</b> Mouse</li>
-      <li><b>Jump</b> Space</li>
-      <li><b>Sprint</b> Shift</li>
-      <li><b>Crouch</b> Caps Lock</li>
-      <li><b>Fire</b> Left Click (hold)</li>
-      <li><b>Reload</b> R</li>
-      <li><b>Switch Weapon</b> 1 Knife · 2 Pistol · 3 Rifle</li>
-      <li><b>Aim (Rifle)</b> Right Click</li>
-      <li><b>Slide</b> Caps Lock while sprinting</li>
-      <li><b>Grenade</b> G</li>
-      <li><b>Bite (as zombie)</b> F — instant infect; your weapons still work</li>
-      <li><b>Interact</b> E — lock/unlock doors, board windows, repair</li>
+      <li class="touch-only"><b>Move</b> Left thumb stick (push all the way to run)</li>
+      <li class="touch-only"><b>Look</b> Drag with your right thumb</li>
+      <li class="touch-only"><b>Fire / Aim</b> FIRE button (drag while firing to aim) / AIM toggles the rifle scope</li>
+      <li class="touch-only"><b>Other</b> JUMP, DUCK, USE (hold to repair), RELOAD, GRENADE, weapon swap, BITE (as zombie)</li>
+      <li class="touch-only"><b>Pause</b> II button, top of the screen</li>
+      <li class="kb-only"><b>Move</b> W A S D</li>
+      <li class="kb-only"><b>Look</b> Mouse</li>
+      <li class="kb-only"><b>Jump</b> Space</li>
+      <li class="kb-only"><b>Sprint</b> Shift</li>
+      <li class="kb-only"><b>Crouch</b> Caps Lock</li>
+      <li class="kb-only"><b>Fire</b> Left Click (hold)</li>
+      <li class="kb-only"><b>Reload</b> R</li>
+      <li class="kb-only"><b>Switch Weapon</b> 1 Knife · 2 Pistol · 3 Rifle</li>
+      <li class="kb-only"><b>Aim (Rifle)</b> Right Click</li>
+      <li class="kb-only"><b>Slide</b> Caps Lock while sprinting</li>
+      <li class="kb-only"><b>Grenade</b> G</li>
+      <li class="kb-only"><b>Bite (as zombie)</b> F — instant infect; your weapons still work</li>
+      <li class="kb-only"><b>Interact</b> E — lock/unlock doors, board windows, repair</li>
       <li><b>Objective</b> Hold the house, loot supply drops, keep your survivors alive</li>
     </ul>
     <div id="lock-note" style="display:none; margin-top:14px; font-size:12px; color:#ffb199; line-height:1.6;">

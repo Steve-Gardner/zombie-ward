@@ -9,7 +9,7 @@ self.addEventListener("activate", e => {
 self.addEventListener("fetch", e => {
   const req = e.request;
   if (req.method !== "GET" || new URL(req.url).origin !== location.origin) return;
-  const isPage = req.mode === "navigate" || req.url.endsWith("/index.html") || req.url.endsWith("/game.js") || req.url.endsWith("/sw.js");
+  const isPage = req.mode === "navigate" || /\/(index\.html|game\.js|touch\.js|quality\.js|touch\.css|sw\.js)$/.test(req.url);
   if (isPage) {
     e.respondWith(fetch(req).then(r => { const copy = r.clone(); caches.open(VERSION).then(c => c.put(req, copy)); return r; }).catch(() => caches.match(req).then(r => r || caches.match("./index.html"))));
   } else {

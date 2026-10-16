@@ -9,6 +9,8 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { SMAAPass } from 'three/addons/postprocessing/SMAAPass.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
+import { touch, initTouch } from './touch.js';
+import { initQuality } from './quality.js';
 
 // ---------------------------------------------------------------------------
 // Core setup
@@ -476,6 +478,7 @@ function isInsideHouse(pos) {
 }
 
 function showInteractPrompt(text, pct) {
+  if (touch.on) text = text.replace('[E]', '[USE]');
   const el = document.getElementById('interact-prompt');
   el.style.display = 'block';
   el.innerHTML = pct == null
@@ -995,6 +998,19 @@ controls.maxPolarAngle = Math.PI - 0.35; // …or straight down
 scene.add(controls.getObject());
 controls.getObject().position.set(0, STAND_HEIGHT, PLAYER_SPAWN_Z);
 
+// Touch screens can't capture the mouse, so on those we fake the "locked" state; everything else keeps using the real pointer lock.
+const realLock = controls.lock.bind(controls), realUnlock = controls.unlock.bind(controls);
+let touchUI = null;
+controls.lock = () => {
+  if (!touch.on) { realLock(); return; }
+  if (touchUI) touchUI.enterFullscreen();
+  if (!controls.isLocked) { controls.isLocked = true; controls.dispatchEvent({ type: 'lock' }); }
+};
+controls.unlock = () => {
+  if (!touch.on) { realUnlock(); return; }
+  if (controls.isLocked) { controls.isLocked = false; controls.dispatchEvent({ type: 'unlock' }); }
+};
+
 const player = {
   health: 100, maxHealth: 100,
   shield: 0, maxShield: 60,
@@ -1279,7 +1295,7 @@ function rangedFire(w) {
     if (!e.alive) continue;
     const bodyPoint = e.root.position.clone().add(new THREE.Vector3(0, 1.05, 0));
     const dist = raycaster.ray.distanceToPoint(bodyPoint);
-    if (dist < 0.85) {
+    if (dist < (touch.on ? 1.15 : 0.85)) {
       const d2 = origin.distanceTo(bodyPoint);
       if (d2 < closestDist) { closestDist = d2; closest = e; }
     }
@@ -2973,7 +2989,10 @@ const gradePass = new ShaderPass({
     }`,
 });
 composer.addPass(gradePass);
-composer.addPass(new SMAAPass(window.innerWidth * renderer.getPixelRatio(), window.innerHeight * renderer.getPixelRatio()));
+const smaaPass = new SMAAPass(window.innerWidth * renderer.getPixelRatio(), window.innerHeight * renderer.getPixelRatio());
+composer.addPass(smaaPass);
+const qualityTick = initQuality({ renderer, composer, sunLight, bloomPass, smaaPass });
+touchUI = initTouch({ camera, controls, player, keys, getTargets: () => hostileTargets(), getWeapon: () => currentWeapon });
 
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
@@ -2996,7 +3015,7 @@ function updateMovement(dt) {
     player.velocity.set(0, 0, 0);
     player.sliding = false;
   }
-  const sprintReady = !player.crouching && !player.sliding && keys['ShiftLeft'] && player.stamina > 1 && (keys['KeyW'] || keys['KeyA'] || keys['KeyS'] || keys['KeyD']);
+  const sprintReady = !player.crouching && !player.sliding && keys['ShiftLeft'] && player.stamina > 1 && (keys['KeyW'] || keys['KeyA'] || keys['KeyS'] || keys['KeyD'] || touch.move.x * touch.move.x + touch.move.y * touch.move.y > 0.1);
   player.sprinting = sprintReady;
 
   let moveVec = new THREE.Vector3();
@@ -3013,10 +3032,11 @@ function updateMovement(dt) {
     player.velocity.x -= player.velocity.x * damping * dt;
     player.velocity.z -= player.velocity.z * damping * dt;
 
-    const forward = (keys['KeyW'] ? 1 : 0) - (keys['KeyS'] ? 1 : 0);
-    const right = (keys['KeyD'] ? 1 : 0) - (keys['KeyA'] ? 1 : 0);
+    const forward = (keys['KeyW'] ? 1 : 0) - (keys['KeyS'] ? 1 : 0) + touch.move.y;
+    const right = (keys['KeyD'] ? 1 : 0) - (keys['KeyA'] ? 1 : 0) + touch.move.x;
     moveVec = new THREE.Vector3(right, 0, -forward);
-    if (moveVec.lengthSq() > 0) moveVec.normalize();
+    const keyboardOnly = touch.move.x === 0 && touch.move.y === 0;
+    if (moveVec.lengthSq() > (keyboardOnly ? 0 : 1)) moveVec.normalize();   // the thumbstick keeps partial speeds
 
     player.velocity.x -= moveVec.x * baseSpeed * 10 * dt * -1;
     player.velocity.z -= moveVec.z * baseSpeed * 10 * dt;
@@ -3195,6 +3215,8 @@ function animate() {
   requestAnimationFrame(animate);
   const dt = Math.min(clock.getDelta(), 0.05);
   const t = clock.elapsedTime;
+  touchUI.update(dt);
+  qualityTick(controls.isLocked && player.alive);
 
   if (controls.isLocked && player.alive) {
     updateMovement(dt);
