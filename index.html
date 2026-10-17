@@ -552,22 +552,21 @@
     master.gain.setValueAtTime(0.0001, actx.currentTime);
     master.gain.linearRampToValueAtTime(0.7, actx.currentTime + 1.2);
 
-    // low, slowly breathing drone
+    // low, slowly breathing drone (starts when the BlindWolf card leaves, so the howl plays alone)
+    const t0 = T(3.3);
     const droneG = actx.createGain(); droneG.gain.value = 0.22;
     const dlp = actx.createBiquadFilter(); dlp.type = 'lowpass'; dlp.frequency.value = 260;
-    const sweep = actx.createOscillator(), sg = actx.createGain(); sweep.frequency.value = 0.13; sg.gain.value = 110; sweep.connect(sg); sg.connect(dlp.frequency); sweep.start(actx.currentTime);
-    for (const f of [41.2, 41.9, 61.8]) { const o = actx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f; o.connect(dlp); o.start(actx.currentTime); o.stop(actx.currentTime + 9.5); }
+    const sweep = actx.createOscillator(), sg = actx.createGain(); sweep.frequency.value = 0.13; sg.gain.value = 110; sweep.connect(sg); sg.connect(dlp.frequency); sweep.start(t0);
+    for (const f of [41.2, 41.9, 61.8]) { const o = actx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f; o.connect(dlp); o.start(t0); o.stop(base + 9.5); }
     dlp.connect(droneG); send(droneG);
     // cold wind
     const wn = actx.createBufferSource(); wn.buffer = noiseBuf(9.5);
     const wbp = actx.createBiquadFilter(); wbp.type = 'bandpass'; wbp.frequency.value = 420; wbp.Q.value = 0.8;
     const wg = actx.createGain(); wg.gain.value = 0.08;
-    const wl = actx.createOscillator(), wlg = actx.createGain(); wl.frequency.value = 0.22; wlg.gain.value = 0.06; wl.connect(wlg); wlg.connect(wg.gain); wl.start(actx.currentTime);
-    wn.connect(wbp); wbp.connect(wg); wg.connect(master); wn.start(actx.currentTime);
+    const wl = actx.createOscillator(), wlg = actx.createGain(); wl.frequency.value = 0.22; wlg.gain.value = 0.06; wl.connect(wlg); wlg.connect(wg.gain); wl.start(t0);
+    wn.connect(wbp); wbp.connect(wg); wg.connect(master); wn.start(t0);
 
     const boom = s => { if (!future(s)) return; const o = actx.createOscillator(), g = actx.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(70, T(s)); o.frequency.exponentialRampToValueAtTime(26, T(s) + 0.9); env(g, s, 0.02, 1.0, 0.9); o.connect(g); send(g); o.start(T(s)); o.stop(T(s) + 1.1); };
-    // heartbeat under the studio card
-    for (let s = 0.5; s < 3.6; s += 1.1) { boom(s); boom(s + 0.24); }
     // wolf howl
     if (howlBuf && future(0.8)) {
       const src = actx.createBufferSource(), g = actx.createGain();
@@ -585,7 +584,6 @@
     }
     // dissonant strings (minor second), tremolo swell
     const strings = (s, f, dur) => { if (!future(s)) return; const g = actx.createGain(), l = actx.createGain(), lf = actx.createOscillator(), f1 = actx.createBiquadFilter(); lf.frequency.value = 7; l.gain.value = 0.5; lf.connect(l); l.connect(g.gain); lf.start(T(s)); lf.stop(T(s) + dur); f1.type = 'lowpass'; f1.frequency.value = 1900; env(g, s, dur * 0.45, dur, 0.1); for (const ff of [f, f * 1.0595]) { const o = actx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = ff; o.connect(f1); o.start(T(s)); o.stop(T(s) + dur + 0.1); } f1.connect(g); send(g); };
-    strings(2.2, 466, 2.4);
     // zombie card: a driving drum march and a heavy bass chord — punchy, not spooky
     const kick = (s, peak) => { if (!future(s)) return; const o = actx.createOscillator(), g = actx.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(130, T(s)); o.frequency.exponentialRampToValueAtTime(42, T(s) + 0.22); env(g, s, 0.005, 0.4, peak); o.connect(g); send(g); o.start(T(s)); o.stop(T(s) + 0.45); };
     const snare = s => { if (!future(s)) return; const n = actx.createBufferSource(); n.buffer = noiseBuf(0.25); const bp = actx.createBiquadFilter(), g = actx.createGain(), o = actx.createOscillator(), og = actx.createGain(); bp.type = 'bandpass'; bp.frequency.value = 1900; bp.Q.value = 0.9; env(g, s, 0.003, 0.2, 0.42); o.type = 'triangle'; o.frequency.value = 190; env(og, s, 0.003, 0.12, 0.3); n.connect(bp); bp.connect(g); send(g); o.connect(og); send(og); n.start(T(s)); n.stop(T(s) + 0.25); o.start(T(s)); o.stop(T(s) + 0.15); };
