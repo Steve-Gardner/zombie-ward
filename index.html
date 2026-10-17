@@ -521,7 +521,7 @@
   const timers = [];
   const at = (ms, fn) => timers.push(setTimeout(fn, ms));
 
-  // ---- Intro soundtrack (synthesized; no audio files) -----------------------
+  // ---- Intro soundtrack (mostly synthesized; the wolf howl is a recording) -----------------------
   let actx = null, master = null, wet = null, pendingUnlock = false;
   try {
     actx = new (window.AudioContext || window.webkitAudioContext)();
@@ -533,6 +533,10 @@
     master.connect(actx.destination);
     wet.connect(dly); dly.connect(lp); lp.connect(fb); fb.connect(dly); lp.connect(actx.destination);
   } catch (e) { actx = null; }
+
+  // Real wolf howl (US Fish & Wildlife Service recording, public domain). If it can't load, the synthesized howl below is used instead.
+  let howlBuf = null;
+  if (actx) fetch('audio/wolf-howl.mp3').then(r => r.arrayBuffer()).then(b => actx.decodeAudioData(b)).then(buf => { howlBuf = buf; }).catch(() => {});
 
   function noiseBuf(dur) { const b = actx.createBuffer(1, Math.floor(actx.sampleRate * dur), actx.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; return b; }
 
@@ -565,7 +569,12 @@
     // heartbeat under the studio card
     for (let s = 0.5; s < 3.6; s += 1.1) { boom(s); boom(s + 0.24); }
     // wolf howl
-    if (future(0.9)) {
+    if (howlBuf && future(0.8)) {
+      const src = actx.createBufferSource(), g = actx.createGain();
+      src.buffer = howlBuf; g.gain.value = 1.15;
+      src.connect(g); send(g);
+      if (elapsed > 0.8) src.start(actx.currentTime, Math.min(elapsed - 0.8, howlBuf.duration - 0.1)); else src.start(T(0.8));
+    } else if (future(0.9)) {
       const o = actx.createOscillator(), o2 = actx.createOscillator(), g = actx.createGain(), bp = actx.createBiquadFilter();
       o.type = 'sawtooth'; o2.type = 'sine';
       for (const x of [o, o2]) { x.frequency.setValueAtTime(260, T(0.9)); x.frequency.linearRampToValueAtTime(640, T(1.9)); x.frequency.linearRampToValueAtTime(560, T(3.0)); x.frequency.linearRampToValueAtTime(380, T(3.5)); }

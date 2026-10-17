@@ -18,3 +18,4 @@ Move with WASD, look with the mouse, click to fire, right-click to aim, R to rel
 * The game code is `game.js` (plus `touch.js` for phone controls and `quality.js` for graphics tiers); the page is `index.html` and `touch.css`.
 * After any change run `python3 build.py` (it refreshes `sw.js`), then commit and push. GitHub Pages republishes automatically in about a minute.
 * The 3D library (Three.js, MIT licence) is bundled in `vendor/` so the game works offline.
+* The wolf howl in the BlindWolf intro is a public-domain recording from the US Fish and Wildlife Service (via Wikimedia Commons, "Wolf howls.ogg"), trimmed to `audio/wolf-howl.mp3`.
